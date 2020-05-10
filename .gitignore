@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # checkpoints
-models/
+*.ckpt
 *.jpg
 
 # Distribution / packaging
