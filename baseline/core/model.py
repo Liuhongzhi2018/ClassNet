@@ -2,16 +2,18 @@ from torch import nn
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-from core import resnet
+from core import resnet, densenet
 import numpy as np
 from core.anchors import generate_default_anchor_maps, hard_nms
 from config import CAT_NUM, PROPOSAL_NUM
 
 
 class ProposalNet(nn.Module):
-    def __init__(self):
+    def __init__(self, in_features=2048):
         super(ProposalNet, self).__init__()
-        self.down1 = nn.Conv2d(2048, 128, 3, 1, 1)
+        # self.down1 = nn.Conv2d(2048, 128, 3, 1, 1)
+        self.down1 = nn.Conv2d(1024, 128, 3, 1, 1)
+
         self.down2 = nn.Conv2d(128, 128, 3, 2, 1)
         self.down3 = nn.Conv2d(128, 128, 3, 2, 1)
         self.ReLU = nn.ReLU()
@@ -31,22 +33,32 @@ class ProposalNet(nn.Module):
 
 
 class attention_net(nn.Module):
-    def __init__(self, topN=4):
+    def __init__(self, topN=4, classNum=200):
         super(attention_net, self).__init__()
         # self.pretrained_model = resnet.resnet50(pretrained=True)
-        self.pretrained_model = resnet.resnet152(pretrained=True)
-        self.pretrained_model.avgpool = nn.AdaptiveAvgPool2d(1)
-        self.pretrained_model.fc = nn.Linear(512 * 4, 200)
+        # self.pretrained_model = resnet.resnet152(pretrained=True)
+        # self.pretrained_model = resnet.resnet101(pretrained=True)
+        self.pretrained_model = densenet.densenet121(pretrained=True,num_classes=classNum)
+        # self.pretrained_model.avgpool = nn.AdaptiveAvgPool2d(1)
+        # print("classNum: ",classNum)        # classNum:  20  Fish
+        num_ftrs = self.pretrained_model.classifier.in_features
+        self.pretrained_model.classifier = nn.Linear(num_ftrs, classNum)
+        # self.pretrained_model.fc = nn.Linear(512 * 4, classNum)
+
         self.proposal_net = ProposalNet()
         self.topN = topN
-        self.concat_net = nn.Linear(2048 * (CAT_NUM + 1), 200)
-        self.partcls_net = nn.Linear(512 * 4, 200)
+        self.concat_net = nn.Linear(1024 * (CAT_NUM + 1), classNum)
+        self.partcls_net = nn.Linear(512 * 2, classNum)
         _, edge_anchors, _ = generate_default_anchor_maps()
         self.pad_side = 224
         self.edge_anchors = (edge_anchors + 224).astype(np.int)
 
     def forward(self, x):
         resnet_out, rpn_feature, feature = self.pretrained_model(x)
+        # print("resnet_out {} rpn_feature {} feature {}".format(resnet_out.shape, rpn_feature.shape, feature.shape))
+        # resnet_out torch.Size([3, 1000]) 
+        # rpn_feature torch.Size([3, 1024, 14, 14]) feature torch.Size([3, 1024])
+
         x_pad = F.pad(x, (self.pad_side, self.pad_side, self.pad_side, self.pad_side), mode='constant', value=0)
         batch = x.size(0)
         # we will reshape rpn to shape: batch * nb_anchor
@@ -71,6 +83,7 @@ class attention_net(nn.Module):
         part_feature = part_feature[:, :CAT_NUM, ...].contiguous()
         part_feature = part_feature.view(batch, -1)
         # concat_logits have the shape: B*200
+        # print("part_feature {}".format(part_feature.shape))
         concat_out = torch.cat([part_feature, feature], dim=1)
         concat_logits = self.concat_net(concat_out)
         raw_logits = resnet_out

@@ -86,22 +86,22 @@ class Fish():
         for line in tqdm(train_file['FileID']):
             train_list.append(line+'.jpg')
         # print("train_list: ",train_list)
-        time.sleep(5)
+        # time.sleep(5)
         train_label_list = []
         for line in tqdm(train_file['SpeciesID']):
             train_label_list.append(int(line))
         # print("train_label_list: ",train_label_list)
-        time.sleep(5)
+        # time.sleep(5)
         test_list = []
         for line in tqdm(test_file['FileID']):
             test_list.append(line+'.jpg')
         # print("test_list: ",test_list)
-        time.sleep(5)
+        # time.sleep(5)
         test_label_list = []
         for line in tqdm(anno_file['SpeciesID']):
             test_label_list.append(int(line))
         # print("test_label_list: ",test_label_list)
-        time.sleep(5)
+        # time.sleep(5)
 
         train_file_list = [img for img in train_list]
         test_file_list = [img for img in test_list]
