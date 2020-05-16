@@ -41,8 +41,7 @@ class attention_net(nn.Module):
         # self.pretrained_model = densenet.densenet121(pretrained=False,num_classes=classNum)
         # self.pretrained_model = densenet.densenet169(pretrained=True,num_classes=classNum)
         # self.pretrained_model = densenet.densenet161(pretrained=True,num_classes=classNum)
-        # self.pretrained_model = resnext.resnext101_32x8d(pretrained=True,num_classes=classNum)
-        self.pretrained_model = resnext.wide_resnet50_2(pretrained=True,num_classes=classNum)
+        self.pretrained_model = resnext.resnext101_32x8d(pretrained=True,num_classes=classNum)
         # self.pretrained_model.avgpool = nn.AdaptiveAvgPool2d(1)
         # print("classNum: ",classNum)        # classNum:  20  Fish
         num_ftrs = self.pretrained_model.fc.in_features
