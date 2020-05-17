@@ -12,7 +12,7 @@ class ProposalNet(nn.Module):
     def __init__(self, in_features=2048):
         super(ProposalNet, self).__init__()
         # self.down1 = nn.Conv2d(2048, 128, 3, 1, 1)
-        self.down1 = nn.Conv2d(512, 128, 3, 1, 1)
+        self.down1 = nn.Conv2d(2048, 128, 3, 1, 1)
 
         self.down2 = nn.Conv2d(128, 128, 3, 2, 1)
         self.down3 = nn.Conv2d(128, 128, 3, 2, 1)
@@ -36,14 +36,13 @@ class attention_net(nn.Module):
     def __init__(self, topN=4, classNum=200):
         super(attention_net, self).__init__()
         # self.pretrained_model = resnet.resnet50(pretrained=True)
-        self.pretrained_model = resnext.resnet34(pretrained=True,num_classes=classNum)
         # self.pretrained_model = resnet.resnet152(pretrained=True)
         # self.pretrained_model = resnet.resnet101(pretrained=True)
         # self.pretrained_model = densenet.densenet121(pretrained=False,num_classes=classNum)
         # self.pretrained_model = densenet.densenet169(pretrained=True,num_classes=classNum)
         # self.pretrained_model = densenet.densenet161(pretrained=True,num_classes=classNum)
         # self.pretrained_model = resnext.resnext101_32x8d(pretrained=True,num_classes=classNum)
-        # self.pretrained_model = resnext.wide_resnet101_2(pretrained=True,num_classes=classNum)
+        self.pretrained_model = resnext.wide_resnet50_2(pretrained=True,num_classes=classNum)
         # self.pretrained_model.avgpool = nn.AdaptiveAvgPool2d(1)
         # print("classNum: ",classNum)        # classNum:  20  Fish
         num_ftrs = self.pretrained_model.fc.in_features
@@ -52,8 +51,8 @@ class attention_net(nn.Module):
 
         self.proposal_net = ProposalNet()
         self.topN = topN
-        self.concat_net = nn.Linear(2560, classNum)
-        self.partcls_net = nn.Linear(512, classNum)
+        self.concat_net = nn.Linear(2048 * (CAT_NUM + 1), classNum)
+        self.partcls_net = nn.Linear(512 * 4, classNum)
         _, edge_anchors, _ = generate_default_anchor_maps()
         self.pad_side = 224
         self.edge_anchors = (edge_anchors + 224).astype(np.int)
