@@ -1,9 +1,10 @@
 import os
+import shutil
 import torch.utils.data
 from torch.nn import DataParallel
 from datetime import datetime
 from torch.optim.lr_scheduler import MultiStepLR
-from config import BATCH_SIZE, PROPOSAL_NUM, SAVE_FREQ, LR, WD, resume, save_dir
+from config import BATCH_SIZE, PROPOSAL_NUM, SAVE_FREQ, LR, WD, resume, save_dir, CLASS_NUM
 from core import model, dataset
 from core.utils import init_log, progress_bar
 
@@ -29,13 +30,21 @@ testset = dataset.Fish(root='./datasets/Fish', is_train=False, data_len=None)
 testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
                                          shuffle=False, num_workers=0, drop_last=False)  # num_workers=8
 # define model
-net = model.attention_net(topN=PROPOSAL_NUM)
+net = model.attention_net(topN=PROPOSAL_NUM, classNum=CLASS_NUM)
 if resume:
     print("\ncontinue train")
     ckpt = torch.load(resume)
     net.load_state_dict(ckpt['net_state_dict'])
     start_epoch = ckpt['epoch'] + 1
 creterion = torch.nn.CrossEntropyLoss()
+
+# print network to txt
+f = open(os.path.join(save_dir,"model_network.txt"), "w")
+print(net, file=f)
+f.close()
+
+# save config file to save dir
+shutil.copy('./config.py', os.path.join(save_dir,'config.py'))
 
 # define optimizers
 raw_parameters = list(net.pretrained_model.parameters())
@@ -153,6 +162,8 @@ for epoch in range(start_epoch, 500):
             'test_loss': test_loss,
             'test_acc': test_acc,
             'net_state_dict': net_state_dict},
-            os.path.join(save_dir, '%03d.ckpt' % epoch))
+            # os.path.join(save_dir, '%03d.ckpt' % epoch))
+            os.path.join(save_dir, 'latest.ckpt')
+            )
 
 print('finishing training')
