@@ -2,7 +2,7 @@ from torch import nn
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-from core import resnet, densenet, resnext, vgg
+from core import resnet, densenet, resnext
 import numpy as np
 from core.anchors import generate_default_anchor_maps, hard_nms
 from config import CAT_NUM, PROPOSAL_NUM
@@ -36,7 +36,7 @@ class attention_net(nn.Module):
     def __init__(self, topN=4, classNum=200):
         super(attention_net, self).__init__()
         # self.pretrained_model = resnet.resnet50(pretrained=True)
-        # self.pretrained_model = resnext.resnet18(pretrained=True,num_classes=classNum)
+        self.pretrained_model = resnext.resnet18(pretrained=True,num_classes=classNum)
         # self.pretrained_model = resnext.resnet34(pretrained=True,num_classes=classNum)
         # self.pretrained_model = resnet.resnet152(pretrained=True)
         # self.pretrained_model = resnet.resnet101(pretrained=True)
@@ -47,15 +47,14 @@ class attention_net(nn.Module):
         # self.pretrained_model = resnext.wide_resnet101_2(pretrained=True,num_classes=classNum)
         # self.pretrained_model.avgpool = nn.AdaptiveAvgPool2d(1)
         # print("classNum: ",classNum)        # classNum:  20  Fish
-        self.pretrained_model = vgg.vgg19(pretrained=True,num_classes=classNum)
-        # num_ftrs = self.pretrained_model.classifier.in_features
-        # self.pretrained_model.fc = nn.Linear(num_ftrs, classNum)
+        num_ftrs = self.pretrained_model.fc.in_features
+        self.pretrained_model.fc = nn.Linear(num_ftrs, classNum)
         # self.pretrained_model.fc = nn.Linear(512 * 4, classNum)
 
         self.proposal_net = ProposalNet()
         self.topN = topN
-        self.concat_net = nn.Linear(125440, classNum)
-        self.partcls_net = nn.Linear(25088, classNum)
+        self.concat_net = nn.Linear(2560, classNum)
+        self.partcls_net = nn.Linear(512, classNum)
         _, edge_anchors, _ = generate_default_anchor_maps()
         self.pad_side = 224
         self.edge_anchors = (edge_anchors + 224).astype(np.int)
