@@ -47,7 +47,7 @@ class attention_net(nn.Module):
         # self.pretrained_model = resnext.wide_resnet101_2(pretrained=True,num_classes=classNum)
         # self.pretrained_model.avgpool = nn.AdaptiveAvgPool2d(1)
         # print("classNum: ",classNum)        # classNum:  20  Fish
-        self.pretrained_model = vgg.vgg13(pretrained=True,num_classes=classNum)
+        self.pretrained_model = vgg.vgg11(pretrained=True,num_classes=classNum)
         # num_ftrs = self.pretrained_model.classifier.in_features
         # self.pretrained_model.fc = nn.Linear(num_ftrs, classNum)
         # self.pretrained_model.fc = nn.Linear(512 * 4, classNum)
