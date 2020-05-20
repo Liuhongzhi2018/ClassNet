@@ -51,6 +51,12 @@ class attention_net(nn.Module):
         batch = x.size(0)
         # we will reshape rpn to shape: batch * nb_anchor
         rpn_score = self.proposal_net(rpn_feature.detach())
+
+        # for x in rpn_score.data.cpu().numpy():
+        #     print("(x.reshape(-1, 1): ",x.reshape(-1, 1).shape)  # (1614, 4)
+        #     print("self.edge_anchors.copy(): ",self.edge_anchors.copy().shape)  # (1614, 4)
+        #     print("np.arange(0, len(x)).reshape(-1, 1)): ",np.arange(0, len(x)).reshape(-1, 1).shape)  # (1611, 4)
+
         all_cdds = [
             np.concatenate((x.reshape(-1, 1), self.edge_anchors.copy(), np.arange(0, len(x)).reshape(-1, 1)), axis=1)
             for x in rpn_score.data.cpu().numpy()]
